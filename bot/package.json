@@ -1,0 +1,25 @@
+{
+  "name": "convoclips",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx tsc",
+    "start": "pnpm build && DEV=true node dist/index.js",
+    "commands:staging": "pnpm build && DEV=true node deploy.js",
+    "commands:prod": "pnpm build && DEV=false node deploy.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.7.1",
+    "dotenv": "^16.0.3",
+    "zod": "^3.20.6"
+  },
+  "devDependencies": {
+    "@types/node": "^18.13.0",
+    "typescript": "^4.9.5"
+  }
+}
