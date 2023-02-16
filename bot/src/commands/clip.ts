@@ -1,82 +1,13 @@
-import {
-	ForumChannel,
-	GuildMemberRoleManager,
-	MessageComponentInteraction,
-} from "discord.js";
-
+import { ForumChannel, MessageComponentInteraction } from "discord.js";
 import { SlashCommandBuilder, ThreadChannel } from "discord.js";
-import { z } from "zod";
 
-const serverSchema = z.object({
-	dc_guildId: z.string(),
-	name: z.string(),
-	website: z.string().optional(),
-	ownerId: z.string(),
-});
-
-const messageSchema = z.object({
-	author: z.string(),
-	content: z.string(),
-});
-
-const clipSchema = z.object({
-	name: z.string(),
-	dc_threadId: z.string(),
-	dc_serverId: z.number().int(),
-	messages: z.array(z.object({}).merge(messageSchema)),
-	tags: z.array(z.string()),
-});
-
-type DC_Server = z.infer<typeof serverSchema> & {
-	id: number;
-};
-
-//I need z schemas in one place
-
-const API_BASE_URL = process.env.DEV
-	? "http://localhost:5173/api"
-	: process.env.API_BASE_URL;
-
-const ROLE = "convoclipper";
-
-function hasPermission(member: MessageComponentInteraction["member"]): boolean {
-	const roles = member?.roles;
-
-	if (!roles) {
-		return false;
-	}
-
-	if (roles instanceof GuildMemberRoleManager) {
-		return roles.cache.some((role) => role.name === ROLE);
-	}
-
-	return roles.some((role) => role === ROLE);
-}
-
-async function isServerRegistered(
-	guildId: string,
-): Promise<undefined | DC_Server> {
-	const server = await fetch(`${API_BASE_URL}/server?dc_guildId=${guildId}`);
-	if (server.status === 404) {
-		return undefined;
-	}
-
-	return await server.json();
-}
-
-async function registerServer(
-	serverData: z.infer<typeof serverSchema>,
-): Promise<DC_Server> {
-	const server = await fetch(`${API_BASE_URL}/server`, {
-		method: "POST",
-		body: JSON.stringify(serverData),
-		headers: {
-			"Content-Type": "application/json",
-		},
-	});
-
-	return await server.json();
-}
+import {
+	hasPermission,
+	isServerRegistered,
+	registerServer,
+	postClip,
+} from "../lib/utils";
+import { serverSchema, clipSchema, messageSchema } from "../lib/z";
 
 export const data = new SlashCommandBuilder()
 	.setName("clip")
@@ -156,21 +87,15 @@ export const execute = async function (
 				throw new Error("missing server");
 			}
 
-			const res = await fetch(`${API_BASE_URL}/clip`, {
-				method: "post",
-				body: JSON.stringify(
-					clipSchema.parse({
-						name,
-						dc_threadId: channel.id,
-						messages: strippedMessages,
-						dc_serverId: server.id,
-						tags,
-					}),
-				),
-				headers: {
-					"Content-Type": "application/json",
-				},
-			});
+			const res = await postClip(
+				clipSchema.parse({
+					name,
+					dc_threadId: channel.id,
+					messages: strippedMessages,
+					dc_serverId: server.id,
+					tags,
+				}),
+			);
 
 			if (res.status === 200) {
 				reply.edit("Clipped.");
