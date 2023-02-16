@@ -5,23 +5,20 @@ import { z, ZodError } from 'zod';
 import { prisma } from '$lib/server/prisma';
 import { Prisma } from '@prisma/client';
 
-const messageSchema = z.object({
-	author: z.string(),
-	content: z.string()
-});
-
 //TODO: make this shareable with bot
-const clipSchema = z.object({
-	name: z.string(),
-	dc_threadId: z.string(),
-	dc_serverId: z.number().int(),
-	messages: z.array(z.object({}).merge(messageSchema)),
-	tags: z.array(z.string()).optional()
+const userSchema = z.object({
+	username: z.string(),
+	email: z.string(),
+	dc_id: z.string(),
+	stripe_customer_id: z.string().optional(),
+	subscribed: z.boolean().optional()
 });
 
-const clipSearchParamsSchema = z.object({
+const userSearchParamsSchema = z.object({
 	id: z.coerce.number().optional(),
-	dc_threadId: z.string().optional()
+	username: z.string().optional(),
+	email: z.string().optional(),
+	dc_id: z.string().optional(),
 });
 
 export const GET = (async ({ url }) => {
@@ -34,22 +31,16 @@ export const GET = (async ({ url }) => {
 			dirtySearchParams[key] = url.searchParams.get(key);
 		}
 
-		const searchParams = clipSearchParamsSchema.parse(dirtySearchParams);
+		const searchParams = userSearchParamsSchema.parse(dirtySearchParams);
 
 		if (Object.keys(searchParams).length > 0) {
-			const clips = await prisma.clip.findUnique({
-				where: searchParams,
-				include: {
-					messages: true
-				}
+			const clips = await prisma.user.findUnique({
+				where: searchParams
 			});
 
 			return clips ? json({ clips }) : json({ message: 'not found' }, { status: 404 });
 		} else {
-			const clips = await prisma.clip.findMany({
-				include: {
-					messages: true
-				},
+			const clips = await prisma.user.findMany({
 				take: 100
 			});
 
@@ -75,39 +66,19 @@ export const POST = (async ({ request }) => {
 	const data = await request.json();
 
 	try {
-		const { name, dc_serverId, dc_threadId, messages, tags = [] } = clipSchema.parse(data);
+		const { username, email, dc_id, stripe_customer_id, subscribed} = userSchema.parse(data);
 
-		const clip = await prisma.clip.create({
+		const server = await prisma.user.create({
 			data: {
-				name,
-				dc_threadId,
-				dc_serverId,
-				messages: {
-					create: messages
-				}
+				username,
+				email,
+				dc_id,
+				stripe_customer_id,
+				subscribed,
 			}
 		});
 
-		for (let i = 0; i < tags.length; i++) {
-			const tag = await prisma.tag.upsert({
-				create: {
-					name: tags[i]
-				},
-				update: {},
-				where: {
-					name: tags[i]
-				}
-			});
-
-			await prisma.clip_Tag.create({
-				data: {
-					clipId: clip.id,
-					tagId: tag.id
-				}
-			});
-		}
-
-		return json({ message: 'created clip', clip });
+		return json({ message: 'created server', server });
 	} catch (e) {
 		console.log(e);
 

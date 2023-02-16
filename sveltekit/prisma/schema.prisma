@@ -6,17 +6,73 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
+model User {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  username  String   @unique @db.VarChar(255)
+  email     String   @unique @db.VarChar(255)
+  dc_id     String   @unique @db.VarChar(255)
+
+  stripe_customer_id String?     @db.VarChar(255)
+  subscribed         Boolean?    @default(false)
+  servers            DC_Server[]
+}
+
+model DC_Server {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  dc_guildId  String   @unique @db.VarChar(255)
+  name        String   @db.VarChar(255)
+  website     String?  @db.VarChar(255)
+  clips_count Int      @default(0)
+  user        User     @relation(fields: [ownerId], references: [dc_id])
+  ownerId     String
+  clips       Clip[]
+
+  @@index([ownerId])
+}
+
+model Tag {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  name      String     @unique
+  clip_tags Clip_Tag[]
+}
+
+model Clip_Tag {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  clip      Clip     @relation(fields: [clipId], references: [id])
+  clipId    Int
+
+  tag   Tag @relation(fields: [tagId], references: [id])
+  tagId Int
+
+  @@index([clipId])
+  @@index([tagId])
+}
+
 model Clip {
-  id        Int       @id @default(autoincrement())
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  name      String    @db.VarChar(255)
-  messages  Message[]
+  id          Int        @id @default(autoincrement())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  name        String     @db.VarChar(255)
+  dc_threadId String     @unique @db.VarChar(255)
+  messages    Message[]
+  clip_tags   Clip_Tag[]
+
+  dc_server   DC_Server @relation(fields: [dc_serverId], references: [id])
+  dc_serverId Int
+
+  @@index([dc_serverId])
 }
 
 model Message {
@@ -25,53 +81,9 @@ model Message {
   updatedAt DateTime @updatedAt
   author    String   @db.VarChar(255)
   content   String
-  clip Clip @relation(fields: [clipId], references: [id])
+
+  clip   Clip @relation(fields: [clipId], references: [id])
   clipId Int
 
   @@index([clipId])
 }
-
-
-//User
-//`id` varchar(255) NOT NULL,
-//`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP(),
-//`dc_id` varchar(255),
-//`email` varchar(255) NOT NULL,
-//`username` varchar(255),
-//`discriminator` varchar(255),
-//`subscribed` tinyint(1) DEFAULT '0',
-//`stripe_customer_id` varchar(255),
-//PRIMARY KEY (`id`),
-//UNIQUE KEY `id` (`id`),
-//UNIQUE KEY `email` (`email`),
-//UNIQUE KEY `dc_id` (`dc_id`)
-
-//Server
-//`id` varchar(255) NOT NULL,
-//`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP(),
-//`owner_id` varchar(255) NOT NULL,
-//`dc_id` varchar(255) NOT NULL,
-//`name` varchar(255) NOT NULL,
-//`website` varchar(255) DEFAULT '',
-//`clips_count` int DEFAULT '0',
-//PRIMARY KEY (`id`),
-//UNIQUE KEY `id` (`id`),
-//UNIQUE KEY `dc_id` (`dc_id`)
-
-
-//Message
-//`id` varchar(255) NOT NULL,
-//`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP(),
-//`clip_id` varchar(255) NOT NULL,
-//`data` json NOT NULL,
-//PRIMARY KEY (`id`),
-//UNIQUE KEY `id` (`id`),
-//UNIQUE KEY `id_2` (`id`)
-
-//clip
-//`id` varchar(255) NOT NULL,
-//`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP(),
-//`channel` varchar(255) NOT NULL,
-//`server_id` varchar(255) NOT NULL,
-//PRIMARY KEY (`id`),
-//UNIQUE KEY `id` (`id`)
