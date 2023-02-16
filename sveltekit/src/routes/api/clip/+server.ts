@@ -4,6 +4,7 @@ import { json } from '@sveltejs/kit';
 import { z, ZodError } from 'zod';
 import { prisma } from '$lib/server/prisma';
 import { Prisma } from '@prisma/client';
+import { uniqueNamesGenerator, NumberDictionary, animals, colors } from 'unique-names-generator';
 
 const messageSchema = z.object({
 	author: z.string(),
@@ -23,6 +24,31 @@ const clipSearchParamsSchema = z.object({
 	id: z.coerce.number().optional(),
 	dc_threadId: z.string().optional()
 });
+
+type Message = z.infer<typeof messageSchema>;
+
+function anonymize(messages: Message[]): Message[] {
+	let randomNames = new Map<string, string>();
+
+	return messages.map((message) => {
+		let randomName = randomNames.get(message.author);
+
+		if (randomName) {
+			message.author = randomName;
+			return message;
+		}
+		const numberDictionary = NumberDictionary.generate({ min: 100, max: 999 });
+		randomName = uniqueNamesGenerator({
+			dictionaries: [colors, animals, numberDictionary],
+			style: 'lowerCase'
+		});
+
+		randomNames.set(message.author, randomName);
+
+		message.author = randomName;
+		return message;
+	});
+}
 
 export const GET = (async ({ url }) => {
 	try {
@@ -77,13 +103,15 @@ export const POST = (async ({ request }) => {
 	try {
 		const { name, dc_serverId, dc_threadId, messages, tags = [] } = clipSchema.parse(data);
 
+		const anonymousMessages = anonymize(messages);
+
 		const clip = await prisma.clip.create({
 			data: {
 				name,
 				dc_threadId,
 				dc_serverId,
 				messages: {
-					create: messages
+					create: anonymousMessages
 				}
 			}
 		});
