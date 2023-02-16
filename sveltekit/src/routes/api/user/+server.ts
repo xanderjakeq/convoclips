@@ -34,17 +34,17 @@ export const GET = (async ({ url }) => {
 		const searchParams = userSearchParamsSchema.parse(dirtySearchParams);
 
 		if (Object.keys(searchParams).length > 0) {
-			const clips = await prisma.user.findUnique({
+			const user = await prisma.user.findUnique({
 				where: searchParams
 			});
 
-			return clips ? json({ clips }) : json({ message: 'not found' }, { status: 404 });
+			return user ? json(user) : json({ message: 'not found' }, { status: 404 });
 		} else {
-			const clips = await prisma.user.findMany({
+			const users = await prisma.user.findMany({
 				take: 100
 			});
 
-			return json({ clips });
+			return json({ users });
 		}
 	} catch (e) {
 		console.log(e);

@@ -70,7 +70,7 @@ export const GET = (async ({ url }) => {
 				}
 			});
 
-			return clips ? json({ clips }) : json({ message: 'not found' }, { status: 404 });
+			return clips ? json(clips) : json({ message: 'not found' }, { status: 404 });
 		} else {
 			const clips = await prisma.clip.findMany({
 				include: {

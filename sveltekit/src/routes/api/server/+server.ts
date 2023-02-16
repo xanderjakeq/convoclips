@@ -38,11 +38,11 @@ export const GET = (async ({ url }) => {
 
 			return server ? json(server) : json({ message: 'not found' }, { status: 404 });
 		} else {
-			const clips = await prisma.dC_Server.findMany({
+			const servers = await prisma.dC_Server.findMany({
 				take: 100
 			});
 
-			return json({ clips });
+			return json({ servers });
 		}
 	} catch (e) {
 		console.log(e);
