@@ -2,9 +2,6 @@ import {
 	GuildMemberRoleManager,
 	MessageComponentInteraction,
 } from "discord.js";
-import { z } from "zod";
-
-import { serverSchema } from "./z";
 import { DC_Server, Clip } from "./types";
 
 const API_BASE_URL = process.env.DEV
@@ -41,7 +38,7 @@ export async function isServerRegistered(
 }
 
 export async function registerServer(
-	serverData: z.infer<typeof serverSchema>,
+	serverData: Omit<DC_Server, "id">,
 ): Promise<DC_Server> {
 	const server = await fetch(`${API_BASE_URL}/server`, {
 		method: "POST",
@@ -52,6 +49,20 @@ export async function registerServer(
 	});
 
 	return await server.json();
+}
+
+export async function updateServer(
+	serverData: Partial<Omit<DC_Server, "id">> & Pick<DC_Server, "dc_guildId">,
+): Promise<DC_Server> {
+	const server = await fetch(`${API_BASE_URL}/server`, {
+		method: "PUT",
+		body: JSON.stringify(serverData),
+		headers: {
+			"Content-Type": "application/json",
+		},
+	});
+
+	return (await server.json()).server;
 }
 
 export async function postClip(clipData: Omit<Clip, "id">): Promise<Response> {
