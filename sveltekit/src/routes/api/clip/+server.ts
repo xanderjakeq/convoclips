@@ -1,33 +1,21 @@
 import type { RequestHandler } from './$types';
+import type { Message } from '$lib/types';
 
 import { json } from '@sveltejs/kit';
 import { z, ZodError } from 'zod';
 import { prisma } from '$lib/server/prisma';
 import { Prisma } from '@prisma/client';
 import { uniqueNamesGenerator, NumberDictionary, animals, colors } from 'unique-names-generator';
-
-const messageSchema = z.object({
-	author: z.string(),
-	content: z.string()
-});
-
-//TODO: make this shareable with bot
-const clipSchema = z.object({
-	name: z.string(),
-	dc_threadId: z.string(),
-	dc_serverId: z.number().int(),
-	messages: z.array(z.object({}).merge(messageSchema)),
-	tags: z.array(z.string()).optional()
-});
+import { clipSchema } from '$lib/z';
 
 const clipSearchParamsSchema = z.object({
 	id: z.coerce.number().optional(),
 	dc_threadId: z.string().optional()
 });
 
-type Message = z.infer<typeof messageSchema>;
+type PartialMessage = Omit<Message, "id">
 
-function anonymize(messages: Message[]): Message[] {
+function anonymize(messages: PartialMessage[]): PartialMessage[] {
 	let randomNames = new Map<string, string>();
 
 	return messages.map((message) => {
@@ -37,7 +25,7 @@ function anonymize(messages: Message[]): Message[] {
 			message.author = randomName;
 			return message;
 		}
-		const numberDictionary = NumberDictionary.generate({ min: 100, max: 999 });
+		const numberDictionary = NumberDictionary.generate({ min: 100, max: 9999 });
 		randomName = uniqueNamesGenerator({
 			dictionaries: [colors, animals, numberDictionary],
 			style: 'lowerCase'
@@ -73,6 +61,7 @@ export const GET = (async ({ url }) => {
 			return clips ? json(clips) : json({ message: 'not found' }, { status: 404 });
 		} else {
 			const clips = await prisma.clip.findMany({
+				orderBy: [{ updatedAt: 'desc' }],
 				include: {
 					messages: true
 				},
