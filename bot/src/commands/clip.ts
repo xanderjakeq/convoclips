@@ -114,6 +114,9 @@ export const execute = async function (
 			reply.react("❌");
 			console.log(e);
 		}
-	}
+	} else {
+        reply.edit("Sorry I only clip threads.");
+        reply.react("ℹ️");
+    }
 };
 
