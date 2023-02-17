@@ -1,11 +1,13 @@
 import { z } from "zod";
 
-
 //I need z schemas in one place shared between bot and sveltekit
+
+export const websiteSchema = z.string().url();
+
 export const serverSchema = z.object({
 	dc_guildId: z.string(),
 	name: z.string(),
-	website: z.string().optional(),
+	website: websiteSchema.optional(),
 	ownerId: z.string(),
 });
 
@@ -21,3 +23,4 @@ export const clipSchema = z.object({
 	messages: z.array(z.object({}).merge(messageSchema)),
 	tags: z.array(z.string()),
 });
+

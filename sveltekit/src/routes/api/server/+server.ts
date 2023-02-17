@@ -64,18 +64,50 @@ export const POST = (async ({ request }) => {
 	const data = await request.json();
 
 	try {
-		const { name, dc_guildId, website, ownerId} = serverSchema.parse(data);
+		const { name, dc_guildId, website, ownerId } = serverSchema.parse(data);
 
 		const server = await prisma.dC_Server.create({
 			data: {
 				name,
 				dc_guildId,
 				website,
-                ownerId
+				ownerId
 			}
 		});
 
 		return json({ message: 'created server', server });
+	} catch (e) {
+		console.log(e);
+
+		if (e instanceof ZodError || e instanceof Prisma.PrismaClientKnownRequestError) {
+			return json({ message: e.message }, { status: 400 });
+		}
+
+		return json({ message: 'something went wrong.' }, { status: 500 });
+	}
+}) satisfies RequestHandler;
+
+export const PUT = (async ({ request }) => {
+	const data = await request.json();
+
+	try {
+		const { name, dc_guildId, website, ownerId } = serverSchema
+			.partial({ name: true, website: true, ownerId: true })
+			.parse(data);
+
+		const server = await prisma.dC_Server.update({
+			where: {
+				dc_guildId
+			},
+			data: {
+				name,
+				dc_guildId,
+				website,
+				ownerId
+			}
+		});
+
+		return json({ message: 'updated server', server });
 	} catch (e) {
 		console.log(e);
 
