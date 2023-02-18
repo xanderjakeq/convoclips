@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npx tsc",
-    "start": "pnpm build && DEV=true node dist/index.js",
+    "start": "node dist/index.js",
+    "dev": "pnpm build && DEV=true node dist/index.js",
     "commands:staging": "pnpm build && DEV=true node deploy.js",
     "commands:prod": "pnpm build && DEV=false node deploy.js"
   },

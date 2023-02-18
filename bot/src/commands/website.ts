@@ -1,18 +1,11 @@
 import {
-	CommandInteraction,
-	CommandInteractionOptionResolver,
-	ForumChannel,
-	GuildMemberRoleManager,
-	MessageComponentInteraction,
+	ChatInputCommandInteraction,
 } from "discord.js";
-import { SlashCommandBuilder, ThreadChannel } from "discord.js";
+import { SlashCommandBuilder } from "discord.js";
 import { ZodError } from "zod";
 
 import { hasPermission, updateServer } from "../lib/utils";
 import {
-	serverSchema,
-	clipSchema,
-	messageSchema,
 	websiteSchema,
 } from "../lib/z";
 
@@ -26,9 +19,11 @@ export const data = new SlashCommandBuilder()
 			.setMaxLength(2000)
 			.setRequired(true);
 	});
-export const execute = async function (interaction: CommandInteraction) {
+export const execute = async function (
+	interaction: ChatInputCommandInteraction,
+) {
 	if (!hasPermission(interaction.member)) {
-		interaction.reply("No permission to clip.");
+		interaction.reply("No permission.");
 		return;
 	}
 
@@ -45,7 +40,7 @@ export const execute = async function (interaction: CommandInteraction) {
 		});
 
 		const reply = await interaction.reply({
-			content: "Upating...",
+			content: "Updating...",
 			fetchReply: true,
 		});
 

@@ -1,4 +1,7 @@
-import { ForumChannel, MessageComponentInteraction } from "discord.js";
+import {
+	ChatInputCommandInteraction,
+	ForumChannel,
+} from "discord.js";
 import { SlashCommandBuilder, ThreadChannel } from "discord.js";
 
 import {
@@ -14,7 +17,7 @@ export const data = new SlashCommandBuilder()
 	.setName("clip")
 	.setDescription("Clip a conversation!");
 export const execute = async function (
-	interaction: MessageComponentInteraction,
+	interaction: ChatInputCommandInteraction,
 ) {
 	if (!hasPermission(interaction.member)) {
 		interaction.reply(`No permission to clip. Must have ${ROLE} role.`);
@@ -36,12 +39,8 @@ export const execute = async function (
 
 		let server = await isServerRegistered(guildId);
 
-		//TODO: check if server exists
-		//do some more stuff later
 		if (guild && !server) {
-			//should registration be required?
-			//maybe add it, with defaults, then owner can customize later
-			await reply.edit("server not found on convoclips.com... creating...");
+			await reply.edit("Server not found on convoclips.com... creating...");
 
 			const { id: dc_guildId, name, ownerId } = guild;
 
@@ -98,18 +97,12 @@ export const execute = async function (
 				}),
 			);
 
-			if (res.status === 200) {
-				reply.edit("Clipped.");
-				reply.react("🐩");
-			} else if (res.status === 400) {
-				throw new Error((await res.json()).message);
-			} else {
-				throw new Error("something went wrong");
-			}
+			reply.edit("Clipped.");
+			reply.react("🐩");
 
-            //TODO improve error handling with accurate messages
+			//TODO improve error handling with accurate messages
 		} catch (e) {
-			if ((e as Error).message.includes("Unique")) {
+			if ((e as Error).message?.includes("Unique")) {
 				reply.edit("Duplicate clip...");
 			} else {
 				reply.edit("Clip failed...");
