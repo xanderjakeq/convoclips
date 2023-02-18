@@ -13,7 +13,7 @@ export const serverSchema = z.object({
 export const messageSchema = z.object({
 	id: z.number(),
 	author: z.string(),
-	content: z.string(),
+	content: z.string().min(0),
 });
 
 export const clipSchema = z.object({

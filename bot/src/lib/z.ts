@@ -12,15 +12,16 @@ export const serverSchema = z.object({
 });
 
 export const messageSchema = z.object({
+	id: z.number(),
 	author: z.string(),
-	content: z.string(),
+	content: z.string().min(0),
 });
 
 export const clipSchema = z.object({
 	name: z.string(),
 	dc_threadId: z.string(),
 	dc_serverId: z.number().int(),
-	messages: z.array(z.object({}).merge(messageSchema)),
+	messages: z.array(z.object({}).merge(messageSchema.partial({ id: true }))),
 	tags: z.array(z.string()),
 });
 

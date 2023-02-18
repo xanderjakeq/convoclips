@@ -6,6 +6,7 @@ import {
 	isServerRegistered,
 	registerServer,
 	postClip,
+	ROLE,
 } from "../lib/utils";
 import { serverSchema, clipSchema, messageSchema } from "../lib/z";
 
@@ -16,7 +17,7 @@ export const execute = async function (
 	interaction: MessageComponentInteraction,
 ) {
 	if (!hasPermission(interaction.member)) {
-		interaction.reply("No permission to clip.");
+		interaction.reply(`No permission to clip. Must have ${ROLE} role.`);
 		return;
 	}
 
@@ -28,7 +29,7 @@ export const execute = async function (
 
 	const isThread = channel instanceof ThreadChannel;
 
-	if (isThread) {
+	if (isThread && channel.parentId) {
 		const guildId = channel.guildId;
 
 		const guild = await interaction.guild?.fetch();
@@ -79,7 +80,7 @@ export const execute = async function (
 					content: message.content,
 				};
 
-				return messageSchema.parse(strippedMessage);
+				return messageSchema.partial({ id: true }).parse(strippedMessage);
 			});
 
 		try {
@@ -101,12 +102,14 @@ export const execute = async function (
 				reply.edit("Clipped.");
 				reply.react("🐩");
 			} else if (res.status === 400) {
-				throw new Error("duplicate clip");
+				throw new Error((await res.json()).message);
 			} else {
 				throw new Error("something went wrong");
 			}
+
+            //TODO improve error handling with accurate messages
 		} catch (e) {
-			if ((e as Error).message === "duplicate clip") {
+			if ((e as Error).message.includes("Unique")) {
 				reply.edit("Duplicate clip...");
 			} else {
 				reply.edit("Clip failed...");
@@ -115,8 +118,8 @@ export const execute = async function (
 			console.log(e);
 		}
 	} else {
-        reply.edit("Sorry I only clip threads.");
-        reply.react("ℹ️");
-    }
+		reply.edit("Sorry I only clip threads.");
+		reply.react("i�");
+	}
 };
 

@@ -8,7 +8,7 @@ const API_BASE_URL = process.env.DEV
 	? "http://localhost:5173/api"
 	: process.env.API_BASE_URL;
 
-const ROLE = "convoclipper";
+export const ROLE = "convoclipper";
 
 export function hasPermission(
 	member: MessageComponentInteraction["member"],
@@ -48,7 +48,7 @@ export async function registerServer(
 		},
 	});
 
-	return await server.json();
+	return (await server.json()).server;
 }
 
 export async function updateServer(
