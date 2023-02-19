@@ -15,7 +15,8 @@ const serverSchema = z.object({
 
 const serverSearchParamsSchema = z.object({
 	id: z.coerce.number().optional(),
-	dc_guildId: z.string().optional()
+	dc_guildId: z.string().optional(),
+	ownerId: z.string().optional()
 });
 
 //TODO: implement some caching maybe
@@ -31,7 +32,7 @@ export const GET = (async ({ url }) => {
 
 		const searchParams = serverSearchParamsSchema.parse(dirtySearchParams);
 
-		if (Object.keys(searchParams).length > 0) {
+		if (searchParams.id || searchParams.dc_guildId || searchParams.ownerId) {
 			const server = await prisma.dC_Server.findUnique({
 				where: searchParams
 			});
@@ -39,6 +40,7 @@ export const GET = (async ({ url }) => {
 			return server ? json(server) : json({ message: 'not found' }, { status: 404 });
 		} else {
 			const servers = await prisma.dC_Server.findMany({
+                where: searchParams,
 				take: 100
 			});
 

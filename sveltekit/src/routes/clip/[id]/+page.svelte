@@ -4,7 +4,6 @@
 	import Clip from '$lib/components/Clip.svelte';
 	export let data;
 	export let clip: ClipType = data;
-    console.log(clip.messages);
 </script>
 
 <svelte:head>

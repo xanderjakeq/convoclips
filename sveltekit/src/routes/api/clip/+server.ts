@@ -10,7 +10,8 @@ import { clipSchema } from '$lib/z';
 
 const clipSearchParamsSchema = z.object({
 	id: z.coerce.number().optional(),
-	dc_threadId: z.string().optional()
+	dc_threadId: z.string().optional(),
+	dc_serverId: z.coerce.number().optional()
 });
 
 type PartialMessage = Omit<Message, "id">
@@ -50,7 +51,7 @@ export const GET = (async ({ url }) => {
 
 		const searchParams = clipSearchParamsSchema.parse(dirtySearchParams);
 
-		if (Object.keys(searchParams).length > 0) {
+		if (searchParams.dc_threadId || searchParams.id) {
 			const clips = await prisma.clip.findUnique({
 				where: searchParams,
 				include: {
@@ -61,6 +62,7 @@ export const GET = (async ({ url }) => {
 			return clips ? json(clips) : json({ message: 'not found' }, { status: 404 });
 		} else {
 			const clips = await prisma.clip.findMany({
+                where: searchParams,
 				orderBy: [{ updatedAt: 'desc' }],
 				include: {
 					messages: true

@@ -22,6 +22,7 @@
 	{#if showServer}
 		<a href="/server/{clip.dc_serverId}" class="hover:text-viridian">server</a>
 	{/if}
+    <h1 class="text-xl my-3">{clip.name}</h1>
 	{#each messages as message, i}
 		<Message showAuthor={i === 0 || message.author != clip.messages[i].author} {message} />
 	{/each}
