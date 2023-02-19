@@ -7,6 +7,15 @@
 	$: renderNav = !(route === '/' || route === '/about');
 </script>
 
+<svelte:head>
+	<meta name="description" content="share your community's wisdom to the world." />
+	<meta property="og:title" content="convoclips" />
+	<meta property="og:description" content="share your community's wisdom to the world." />
+	<meta property="og:type" content="website" />
+    <meta property="og:image" content={`${logo}`} />
+	<meta property="og:url" content="https://www.convoclips.com/" />
+</svelte:head>
+
 {#if renderNav}
 	<nav
 		class="md:mx-auto w-full max-w-3xl flex items-start justify-start py-2

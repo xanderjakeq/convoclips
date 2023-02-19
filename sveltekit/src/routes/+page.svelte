@@ -2,6 +2,10 @@
 	import { PUBLIC_BOT_INVITE_URL } from '$env/static/public';
 </script>
 
+<svelte:head>
+	<title>convoclips</title>
+</svelte:head>
+
 <div
 	class="md:container md:mx-auto flex items-center justify-center font-mono
     h-screen"
