@@ -56,13 +56,15 @@
         padding: 1rem;
         border-radius: 0.5rem;
     }
+
     :global(code) {
         position: relative;
     }
+
     :global(code::before) {
         display: block;
-        content: ' 'attr(class)' ';
-        color: #FC440F;
+        content: ' ' attr(class) ' ';
+        color: #fc440f;
         position: relative;
         top: 0;
     }
